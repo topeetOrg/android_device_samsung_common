@@ -1,0 +1,25 @@
+#!/system/bin/sh
+
+#echo "enter linux.rc" > /dev/tty
+
+#/system/bin/ifconfig eth0 192.168.0.15 netmask 255.255.255.0 up
+
+#/system/bin/route add default gw 192.168.0.201 dev eth0
+
+if [ -c /dev/input/event1 ]; then
+     
+        if [ ! -e /data/pointercal ]; then
+            echo "*****************start calibrate*****************"
+                  /system/bin/calibrate
+            echo " *****************end calibrate*******************"
+        fi
+       
+        if [ -e /data/pointercal -a ! -s /data/pointercal ] ; then
+                rm /data/pointercal
+                echo "*****************start calibrate*****************"
+                  /system/bin/calibrate
+                echo " *****************end calibrate*******************"                
+        fi
+fi
+
+echo "*****************start init *****************"

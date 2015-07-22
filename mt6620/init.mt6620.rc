@@ -1,0 +1,196 @@
+on post-fs-data
+# mainly do mkdir/insmod/mknod in this section
+
+#
+# MT6620 related device nodes & modules & configuration (begin)
+#
+
+# BlueZ driver internal config file generated path
+    mkdir /data/bluetooth 0711 bluetooth bluetooth
+
+# wpa_supplicant control socket for android wifi.c
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    chmod 0770 /data/misc/wifi
+    chmod 0660 /data/misc/wifi/wpa_supplicant.conf
+    chmod 0660 /data/misc/wifi/p2p_supplicant.conf
+    chown wifi wifi /data/misc/wifi
+    chown wifi wifi /data/misc/wifi/wpa_supplicant.conf
+    chown wifi wifi /data/misc/wifi/p2p_supplicant.conf
+
+# wpa_supplicant socket
+    mkdir /data/system 0771 system system
+    mkdir /data/system/wpa_supplicant 0771 wifi wifi
+    chmod 0771 /data/system/wpa_supplicant
+    chown wifi wifi /data/system/wpa_supplicant
+    mkdir /data/misc/p2p_supplicant 0771 wifi wifi
+    chmod 0771 /data/misc/p2p_supplicant
+    chown wifi wifi /data/misc/p2p_supplicant
+
+# wpa_supplicant control socket for android wifi.c
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/dhcp 0771 dhcp dhcp
+    mkdir /data/wifi 0771 wifi wifi
+    chown dhcp dhcp /data/misc/dhcp
+
+    setprop wifi.interface "wlan0"
+    setprop wifi.direct.multicast 1
+
+# Load common part modules
+    insmod /system/lib/modules/mtk_hif_sdio.ko
+    insmod /system/lib/modules/mtk_stp_wmt.ko
+    insmod /system/lib/modules/mtk_stp_uart.ko
+
+# Load GPS module
+    insmod /system/lib/modules/mtk_stp_gps.ko
+
+# Load BlueZ module
+    insmod /system/lib/modules/hci_stp.ko
+
+# Load FM modules
+    insmod /system/lib/modules/mt6620_fm_drv.ko
+    insmod /system/lib/modules/mtk_fm_priv.ko
+
+# Load wifi modules
+    insmod /system/lib/modules/mtk_wmt_wifi.ko WIFI_major=194
+    insmod /system/lib/modules/wlan.ko
+
+#Create char device file for WMT, BT, GPS, FM
+#    mknod /dev/wmtWifi_test c 194 0
+
+    chmod 0666 /dev/stpwmt
+    chmod 0666 /dev/stpgps
+    #chmod 0666 /dev/stpbt
+    chmod 0666 /dev/fm
+    chmod 0666 /dev/wmtWifi
+    chmod 0660 /dev/ttySAC0
+    chmod 0666 /dev/gps
+
+#    chmod 0660 /dev/wmtWifi_test
+#    chown system system /dev/wmtWifi_test
+
+    chown system system /dev/wmtWifi
+    chown system system /dev/fm
+    chown system system /dev/stpwmt
+    chown system system /dev/stpgps
+    chown system system /dev/ttySAC0
+    #chown system system /dev/stpbt
+    chown system system /dev/gps
+
+    mkdir /data/bluetooth 0711 bluetooth bluetooth
+
+    # wpa_supplicant control socket for android wifi.c
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    chmod 0770 /data/misc/wifi
+    chmod 0660 /data/misc/wifi/wpa_supplicant.conf
+    chmod 0660 /data/misc/wifi/p2p_supplicant.conf
+    chown wifi wifi /data/misc/wifi
+    chown wifi wifi /data/misc/wifi/wpa_supplicant.conf
+    chown wifi wifi /data/misc/wifi/p2p_supplicant.conf
+
+    # wpa_supplicant socket
+    mkdir /data/system 0771 system system
+    mkdir /data/system/wpa_supplicant 0771 wifi wifi
+    chmod 0771 /data/system/wpa_supplicant
+    chown wifi wifi /data/system/wpa_supplicant
+    mkdir /data/misc/p2p_supplicant 0771 wifi wifi
+    chmod 0771 /data/misc/p2p_supplicant
+    chown wifi wifi /data/misc/p2p_supplicant
+
+    # wpa_supplicant control socket for android wifi.c
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/dhcp 0771 dhcp dhcp
+    mkdir /data/wifi 0771 wifi wifi
+    chown dhcp dhcp /data/misc/dhcp
+
+    setprop wifi.interface "wlan0"
+    setprop wifi.direct.multicast 1
+    start 6620_launcher
+
+#
+# MT6620 related device nodes & modules & configuration (begin)
+#
+
+# Encrypt phone function
+    setprop vold.post_fs_data_done 1
+
+on boot
+# MT6620 related services (Begin)
+service 6620_launcher /system/bin/6620_launcher -m 1 -b 921600 -n /system/etc/firmware/mt6620_patch_hdr.bin -d /dev/ttySAC0
+    user system
+    group system
+    class main
+    oneshot
+#    class mt6620_user_guard
+
+service mnld /system/xbin/mnld
+    socket mnld stream 666 system system
+    disabled
+
+#AGPS
+#service agpsd /system/bin/mtk_agpsd
+#    class main
+#    socket agpsd stream 666 system system
+
+    chmod 770 /etc/agps_profiles_conf.xml
+
+service hald /system/bin/hald
+    class main
+    socket hald stream 0660 root system
+
+service wpa_supplicant /system/bin/wpa_supplicant -dd -Dwext -iwlan0 -c /data/misc/wifi/wpa_supplicant.conf
+    group wifi system inet
+    disabled
+    oneshot
+
+service p2p_supplicant /system/bin/p2p_supplicant -dd -Dnl80211 -ip2p0 -c /data/misc/wifi/p2p_supplicant.conf
+    group wifi system inet
+    disabled
+    oneshot
+
+service dhcpcd_wlan0 /system/bin/dhcpcd -A -B -dd
+    group system dhcp
+    disabled
+    oneshot
+
+service dhcpcd_p2p /system/bin/dhcpcd -A -B -dd
+    class main
+    disabled
+    oneshot
+
+service iprenew_wlan0 /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
+service dhcpcd_bnep0 /system/bin/dhcpcd -A -B -dd
+    class main
+    disabled
+    oneshot
+
+service hfag /system/bin/sdptool add --channel=10 HFAG
+    user bluetooth
+    group bluetooth net_bt_admin
+    disabled
+    oneshot
+
+service hsag /system/bin/sdptool add --channel=11 HSAG
+    user bluetooth
+    group bluetooth net_bt_admin
+    disabled
+    oneshot
+
+service opush /system/bin/sdptool add --channel=12 OPUSH
+    user bluetooth
+    group bluetooth net_bt_admin
+    disabled
+    oneshot
+
+service pbap /system/bin/sdptool add --channel=19 PBAP
+    user bluetooth
+    group bluetooth net_bt_admin
+    disabled
+    oneshot
+
+# MT6620 related services (End)

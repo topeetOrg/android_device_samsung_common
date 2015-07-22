@@ -1,0 +1,3 @@
+#!/system/bin/sh
+
+/system/bin/cat /data/pointercal > /proc/driver/micc_ts
