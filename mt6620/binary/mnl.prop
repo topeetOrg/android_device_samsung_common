@@ -1,0 +1,6 @@
+dev.dsp=/dev/stpgps
+debug.dbg2file=1
+BEE_enabled=0
+TCXO_PPB=500
+TCXO_TYPE=255
+TCXO_FEQ=26000000

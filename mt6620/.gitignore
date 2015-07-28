@@ -9,12 +9,12 @@
 #
 # Normal rules
 #
-.*
+#.*
 *.ko
-binary
-*.apk
+#binary
+#*.apk
 #
 # git files that we don't want to ignore even it they are dot-files
 #
-!.gitignore
-!.mailmap
+#!.gitignore
+#!.mailmap
